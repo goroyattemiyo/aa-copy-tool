@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "presets": [
+    {
+      "id": "preset-001",
+      "name": "Twitter/X",
+      "url_pattern": "twitter.com|x.com",
+      "newline": "LF",
+      "space": "full"
+    },
+    {
+      "id": "preset-002",
+      "name": "LINE",
+      "url_pattern": "line.me",
+      "newline": "LF",
+      "space": "full"
+    },
+    {
+      "id": "preset-003",
+      "name": "5ch",
+      "url_pattern": "5ch.net|2ch.sc",
+      "newline": "CRLF",
+      "space": "full"
+    }
+  ]
+}
