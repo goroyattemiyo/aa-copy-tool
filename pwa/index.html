@@ -8,7 +8,52 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>AA Copy Tool</h1>
+  <div id="app">
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="search">検索</button>
+      <button class="tab" data-tab="stock">ストック</button>
+      <button class="tab" data-tab="settings">設定</button>
+    </nav>
+
+    <section id="search" class="screen active">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="AAを検索..." />
+        <button id="searchBtn">検索</button>
+      </div>
+      <div id="searchResults" class="aa-list"></div>
+    </section>
+
+    <section id="stock" class="screen">
+      <div class="filter-bar">
+        <select id="sortSelect">
+          <option value="use_count">よく使う順</option>
+          <option value="created_at">登録日順</option>
+        </select>
+        <input type="text" id="tagFilter" placeholder="タグで絞り込み" />
+      </div>
+      <div id="stockList" class="aa-list"></div>
+    </section>
+
+    <section id="settings" class="screen">
+      <h2>補正プリセット</h2>
+      <div id="presetList"></div>
+      <div class="preset-form">
+        <input type="text" id="presetName" placeholder="プリセット名（例：Twitter/X）" />
+        <input type="text" id="presetPattern" placeholder="URLパターン（例：twitter.com|x.com）" />
+        <select id="presetNewline">
+          <option value="LF">LF</option>
+          <option value="CRLF">CRLF</option>
+        </select>
+        <select id="presetSpace">
+          <option value="full">全角に統一</option>
+          <option value="half">半角に統一</option>
+        </select>
+        <button id="addPresetBtn">追加</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
