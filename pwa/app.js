@@ -1,5 +1,8 @@
 const API = 'https://aa-copy-tool-goroyattemiyos-projects.vercel.app/api';
 
+let presetsCache = [];
+let selectedPreset = null;
+
 // タブ切り替え
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -20,6 +23,40 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2000);
 }
 
+// プリセット初期ロード
+async function initPresets() {
+  try {
+    const res = await fetch(`${API}/presets`);
+    const data = await res.json();
+    presetsCache = data.presets || [];
+    renderPresetSelector();
+  } catch { presetsCache = []; }
+}
+
+// 検索画面にプリセットセレクターを追加
+function renderPresetSelector() {
+  const existing = document.getElementById('presetSelector');
+  if (existing) existing.remove();
+  const selector = document.createElement('select');
+  selector.id = 'presetSelector';
+  selector.style.cssText = 'width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff;';
+  const none = document.createElement('option');
+  none.value = '';
+  none.textContent = '補正なし';
+  selector.appendChild(none);
+  presetsCache.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    selector.appendChild(opt);
+  });
+  selector.addEventListener('change', () => {
+    selectedPreset = presetsCache.find(p => p.id === selector.value) || null;
+  });
+  const searchScreen = document.getElementById('search');
+  searchScreen.insertBefore(selector, searchScreen.querySelector('.search-box').nextSibling);
+}
+
 // 補正適用
 function applyPreset(text, preset) {
   if (!preset) return text;
@@ -29,16 +66,6 @@ function applyPreset(text, preset) {
   if (preset.space === 'full') result = result.replace(/ /g, '　');
   if (preset.space === 'half') result = result.replace(/　/g, ' ');
   return result;
-}
-
-// 現在のページURLでプリセット自動判定
-async function detectPreset() {
-  try {
-    const res = await fetch(`${API}/presets`);
-    const data = await res.json();
-    const url = location.href;
-    return data.presets.find(p => new RegExp(p.url_pattern).test(url)) || null;
-  } catch { return null; }
 }
 
 // AAカード生成
@@ -55,15 +82,14 @@ function renderCard(item, showStock = true) {
     </div>
   `;
   card.querySelector('.copy-btn').addEventListener('click', async () => {
-    const preset = await detectPreset();
-    const text = applyPreset(item.body, preset);
+    const text = applyPreset(item.body, selectedPreset);
     await navigator.clipboard.writeText(text);
     await fetch(`${API}/history`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aa_id: item.id, preset_used: preset?.name || null })
+      body: JSON.stringify({ aa_id: item.id, preset_used: selectedPreset?.name || null })
     });
-    toast('コピーしました');
+    toast(selectedPreset ? `コピー（${selectedPreset.name}補正）` : 'コピーしました');
   });
   if (showStock) {
     card.querySelector('.stock-btn').addEventListener('click', async () => {
@@ -121,6 +147,7 @@ document.getElementById('tagFilter').addEventListener('input', loadStock);
 async function loadPresets() {
   const res = await fetch(`${API}/presets`);
   const data = await res.json();
+  presetsCache = data.presets || [];
   const container = document.getElementById('presetList');
   container.innerHTML = '';
   data.presets.forEach(p => {
@@ -132,6 +159,7 @@ async function loadPresets() {
     `;
     container.appendChild(card);
   });
+  renderPresetSelector();
 }
 
 document.getElementById('addPresetBtn').addEventListener('click', async () => {
@@ -150,3 +178,6 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   toast('プリセットを追加しました');
   loadPresets();
 });
+
+// 初期化
+initPresets();
