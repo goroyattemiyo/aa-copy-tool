@@ -1,24 +1,8 @@
 {
   "name": "aa-copy-tool",
   "version": "1.0.0",
-  "description": "アスキーアート（AA）を検索・ストック・コピーするツール。 PWA（スマホ対応）と Chrome 拡張（PC）の両対応。",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/goroyattemiyo/aa-copy-tool.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/goroyattemiyo/aa-copy-tool/issues"
-  },
-  "homepage": "https://github.com/goroyattemiyo/aa-copy-tool#readme",
+  "type": "module",
   "dependencies": {
-    "@octokit/rest": "^22.0.1"
+    "@octokit/rest": "^21.0.0"
   }
 }
