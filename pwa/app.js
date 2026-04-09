@@ -181,3 +181,8 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
 
 // 初期化
 initPresets();
+
+// 設定画面の初期表示
+document.addEventListener('DOMContentLoaded', () => {
+  loadPresets();
+});
