@@ -6,5 +6,8 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "permissions": ["storage", "activeTab"]
+  "permissions": ["storage", "activeTab", "tabs", "clipboardWrite"],
+  "host_permissions": [
+    "https://aa-copy-tool-goroyattemiyos-projects.vercel.app/*"
+  ]
 }

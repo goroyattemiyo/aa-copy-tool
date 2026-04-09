@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>AA Copy Tool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="search">検索</button>
+      <button class="tab" data-tab="stock">ストック</button>
+    </nav>
+
+    <section id="search" class="screen active">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="AAを検索..." />
+        <button id="searchBtn">検索</button>
+      </div>
+      <div id="searchResults" class="aa-list"></div>
+    </section>
+
+    <section id="stock" class="screen">
+      <div id="stockList" class="aa-list"></div>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
