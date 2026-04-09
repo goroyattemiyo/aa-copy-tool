@@ -30,6 +30,7 @@ async function initPresets() {
     const data = await res.json();
     presetsCache = data.presets || [];
     renderPresetSelector();
+    renderPresetList();
   } catch { presetsCache = []; }
 }
 
@@ -55,6 +56,26 @@ function renderPresetSelector() {
   });
   const searchScreen = document.getElementById('search');
   searchScreen.insertBefore(selector, searchScreen.querySelector('.search-box').nextSibling);
+}
+
+// プリセット一覧を描画
+function renderPresetList() {
+  const container = document.getElementById('presetList');
+  container.innerHTML = '';
+  if (presetsCache.length === 0) {
+    container.innerHTML = '<p class="hint">まだプリセットがありません</p>';
+    return;
+  }
+  presetsCache.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'preset-card';
+    card.innerHTML = `
+      <div class="preset-name">${p.name}</div>
+      <div class="preset-detail">URL：${p.url_pattern}</div>
+      <div class="preset-detail">改行：${p.newline} ／ スペース：${p.space === 'full' ? '全角に統一' : p.space === 'half' ? '半角に統一' : '補正しない'}</div>
+    `;
+    container.appendChild(card);
+  });
 }
 
 // 補正適用
@@ -143,25 +164,18 @@ async function loadStock() {
 document.getElementById('sortSelect').addEventListener('change', loadStock);
 document.getElementById('tagFilter').addEventListener('input', loadStock);
 
-// プリセット一覧
+// プリセット一覧ロード
 async function loadPresets() {
-  const res = await fetch(`${API}/presets`);
-  const data = await res.json();
-  presetsCache = data.presets || [];
-  const container = document.getElementById('presetList');
-  container.innerHTML = '';
-  data.presets.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'preset-card';
-    card.innerHTML = `
-      <div class="preset-name">${p.name}</div>
-      <div class="preset-detail">${p.url_pattern} / ${p.newline} / スペース:${p.space}</div>
-    `;
-    container.appendChild(card);
-  });
-  renderPresetSelector();
+  try {
+    const res = await fetch(`${API}/presets`);
+    const data = await res.json();
+    presetsCache = data.presets || [];
+    renderPresetList();
+    renderPresetSelector();
+  } catch { presetsCache = []; }
 }
 
+// プリセット追加
 document.getElementById('addPresetBtn').addEventListener('click', async () => {
   const name = document.getElementById('presetName').value.trim();
   const url_pattern = document.getElementById('presetPattern').value.trim();
@@ -176,13 +190,9 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   document.getElementById('presetName').value = '';
   document.getElementById('presetPattern').value = '';
   toast('プリセットを追加しました');
-  loadPresets();
+  await loadPresets();
+  document.getElementById('presetList').scrollIntoView({ behavior: 'smooth' });
 });
 
 // 初期化
 initPresets();
-
-// 設定画面の初期表示
-document.addEventListener('DOMContentLoaded', () => {
-  loadPresets();
-});
