@@ -21,6 +21,13 @@
       "url_pattern": "5ch.net|2ch.sc",
       "newline": "CRLF",
       "space": "full"
+    },
+    {
+      "id": "preset-004",
+      "name": "Threads",
+      "url_pattern": "threads.net",
+      "newline": "LF",
+      "space": "full"
     }
   ]
 }
