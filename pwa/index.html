@@ -36,20 +36,44 @@
 
     <section id="settings" class="screen">
       <h2>補正プリセット</h2>
+      <p class="hint">貼り付け先のサービスごとに補正設定を登録します。コピー時にセレクターで選ぶと自動で補正が適用されます。</p>
+
       <div id="presetList"></div>
-      <div class="preset-form">
-        <input type="text" id="presetName" placeholder="プリセット名（例：Twitter/X）" />
-        <input type="text" id="presetPattern" placeholder="URLパターン（例：twitter.com|x.com）" />
+
+      <div class="section-title">新しいプリセットを追加</div>
+
+      <div class="form-group">
+        <label>プリセット名</label>
+        <p class="hint">貼り付け先のサービス名（例：Twitter/X、LINE、5ch）</p>
+        <input type="text" id="presetName" placeholder="例：Twitter/X" />
+      </div>
+
+      <div class="form-group">
+        <label>URLパターン</label>
+        <p class="hint">貼り付け先のURLに含まれる文字列。複数ある場合は | で区切る（例：twitter.com|x.com）</p>
+        <input type="text" id="presetPattern" placeholder="例：twitter.com|x.com" />
+      </div>
+
+      <div class="form-group">
+        <label>改行コード</label>
+        <p class="hint">LF はUnix・Web系サービス向け。CRLF はWindows・掲示板系向け。迷ったらLF。</p>
         <select id="presetNewline">
-          <option value="LF">LF</option>
-          <option value="CRLF">CRLF</option>
+          <option value="LF">LF（Unix・Web系）</option>
+          <option value="CRLF">CRLF（Windows・掲示板系）</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label>スペース補正</label>
+        <p class="hint">全角に統一：半角スペースを全角に変換。SNS系で崩れにくくなる。半角に統一：全角スペースを半角に変換。</p>
         <select id="presetSpace">
           <option value="full">全角に統一</option>
           <option value="half">半角に統一</option>
+          <option value="none">補正しない</option>
         </select>
-        <button id="addPresetBtn">追加</button>
       </div>
+
+      <button id="addPresetBtn">追加</button>
     </section>
 
     <div id="toast" class="toast"></div>
