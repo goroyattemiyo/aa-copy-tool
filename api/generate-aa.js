@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
-  const fullPrompt = '「' + prompt + '」をテーマにした日本語アスキーアート（AA）を3件生成してください。JSON配列のみで返してください（説明文・コードブロック不要）：[{"title":"タイトル","body":"AAの内容（改行は\\nで）","tags":["タグ1"]}]';
+  const fullPrompt = '「' + prompt + '」をテーマにした日本語アスキーアート（AA）を3件生成してください。\n\n【良い例】\n{"title":"モナー","body":" \u2227_\u2227\n(\u3000\u00b4\u2200\uff40)\n(\u3000\u3000\u3000\u3000)","tags":["\u30ad\u30e3\u30e9"]}\n{"title":"\u30b7\u30e7\u30dc\u30fc\u30f3","body":"(\u00b4\u30fb\u03c9\u30fb\uff40)","tags":["\u9854\u6587\u5b57"]}\n\n【ルール】\n- 全角文字・記号を使う\n- 線がそろっていてきれいに見えるもの\n- 崩れた記号の羅列はNG\n- bodyの改行は\\nで表現\n\nJSON配列のみで返してください：\n[{"title":"タイトル","body":"AAの内容","tags":["タグ"]}]';
 
   try {
     const geminiRes = await fetch(GEMINI_API + '?key=' + process.env.GEMINI_API_KEY, {
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 512 },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
       }),
     });
 
