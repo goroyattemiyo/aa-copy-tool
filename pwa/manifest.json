@@ -1,9 +1,9 @@
 {
   "name": "AA Copy Tool",
   "short_name": "AA Copy",
-  "start_url": "/",
+  "start_url": "/pwa/splash.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "icons": []
 }
