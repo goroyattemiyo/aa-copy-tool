@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
-  const fullPrompt = '「' + prompt + '」をテーマにした日本語アスキーアート（AA）を5件生成してください。\n\n【条件】\n- 2ch/5ch掲示板文化で使われるスタイルのAA\n- 全角文字・記号・顔文字を使ったテキストアート\n- bodyの改行は\\nで表現\n- 1行顔文字でもOK\n\nJSON配列のみで返してください（説明文・コードブロック不要）：\n[{"title":"タイトル","body":"AAの内容","tags":["タグ1","タグ2"]}]';
+  const fullPrompt = 'catをテーマにした日本語AAを3件生成してください。JSON配列のみで返してください：[{"title":"タイトル","body":"AA","tags":["タグ"]}]';
 
   try {
     const geminiRes = await fetch(GEMINI_API + '?key=' + process.env.GEMINI_API_KEY, {
@@ -19,10 +19,7 @@ export default async function handler(req, res) {
     });
 
     const data = await geminiRes.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-    const clean = raw.replace(/ + '`' + json| + '`' + /g, '').trim();
-    const items = JSON.parse(clean);
-    return res.status(200).json({ items, raw });
+    return res.status(200).json({ data });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
