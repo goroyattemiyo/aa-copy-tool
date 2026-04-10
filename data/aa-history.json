@@ -1,4 +1,11 @@
 {
   "version": 1,
-  "items": []
+  "items": [
+    {
+      "aa_id": "uuid",
+      "preset_used": null,
+      "id": "43b542ca-3ccf-49fb-bb21-85e73b90cb6e",
+      "copied_at": "2026-04-10T12:37:07.491Z"
+    }
+  ]
 }
