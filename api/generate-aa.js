@@ -20,7 +20,10 @@ export default async function handler(req, res) {
 
     const data = await geminiRes.json();
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-    const clean = raw.replace(/^[\s\S]*?(\[[\s\S]*\])[\s\S]*$/, '').trim();
+    const start = raw.indexOf('[');
+    const end = raw.lastIndexOf(']');
+    if (start === -1 || end === -1) return res.status(200).json({ items: [] });
+    const clean = raw.slice(start, end + 1);
     const items = JSON.parse(clean);
     return res.status(200).json({ items });
   } catch (e) {
