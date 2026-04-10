@@ -26,7 +26,7 @@ function toast(msg) {
 // プリセット初期ロード
 async function initPresets() {
   try {
-    const res = await fetch(`${API}/presets`);
+    const res = await fetch(API + '/presets');
     const data = await res.json();
     presetsCache = data.presets || [];
     renderPresetSelector();
@@ -69,11 +69,10 @@ function renderPresetList() {
   presetsCache.forEach(p => {
     const card = document.createElement('div');
     card.className = 'preset-card';
-    card.innerHTML = `
-      <div class="preset-name">${p.name}</div>
-      <div class="preset-detail">URL：${p.url_pattern}</div>
-      <div class="preset-detail">改行：${p.newline} ／ スペース：${p.space}</div>
-    `;
+    card.innerHTML = '<div class="preset-name"></div><div class="preset-detail"></div><div class="preset-detail2"></div>';
+    card.querySelector('.preset-name').textContent = p.name;
+    card.querySelector('.preset-detail').textContent = 'URL：' + p.url_pattern;
+    card.querySelector('.preset-detail2').textContent = '改行：' + p.newline + ' ／ スペース：' + (p.space === 'full' ? '全角に統一' : p.space === 'half' ? '半角に統一' : '補正しない');
     container.appendChild(card);
   });
 }
@@ -93,35 +92,56 @@ function applyPreset(text, preset) {
 function renderCard(item, showStock = true) {
   const card = document.createElement('div');
   card.className = 'aa-card';
-  card.innerHTML = `
-    <div class="aa-title">${item.title}</div>
-    <div class="aa-tags">${(item.tags || []).join(', ')}</div>
-    <div class="aa-body">${item.body}</div>
-    <div class="aa-actions">
-      <button class="copy-btn">コピー</button>
-      ${showStock ? '<button class="stock-btn">ストック</button>' : ''}
-    </div>
-  `;
-  card.querySelector('.copy-btn').addEventListener('click', async () => {
+
+  const title = document.createElement('div');
+  title.className = 'aa-title';
+  title.textContent = item.title;
+
+  const tags = document.createElement('div');
+  tags.className = 'aa-tags';
+  tags.textContent = (item.tags || []).join(' / ');
+
+  const body = document.createElement('div');
+  body.className = 'aa-body';
+  body.textContent = item.body;
+
+  const actions = document.createElement('div');
+  actions.className = 'aa-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'コピー';
+  copyBtn.addEventListener('click', async () => {
     const text = applyPreset(item.body, selectedPreset);
     await navigator.clipboard.writeText(text);
-    await fetch(`${API}/history`, {
+    await fetch(API + '/history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aa_id: item.id, preset_used: selectedPreset?.name || null })
+      body: JSON.stringify({ aa_id: item.id, preset_used: selectedPreset ? selectedPreset.name : null })
     });
-    toast(selectedPreset ? `コピー（${selectedPreset.name}補正）` : 'コピーしました');
+    toast(selectedPreset ? 'コピー（' + selectedPreset.name + '補正）' : 'コピーしました');
   });
+  actions.appendChild(copyBtn);
+
   if (showStock) {
-    card.querySelector('.stock-btn').addEventListener('click', async () => {
-      await fetch(`${API}/stock`, {
+    const stockBtn = document.createElement('button');
+    stockBtn.className = 'stock-btn';
+    stockBtn.textContent = 'ストック';
+    stockBtn.addEventListener('click', async () => {
+      await fetch(API + '/stock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: item.title, body: item.body, tags: item.tags })
       });
       toast('ストックしました');
     });
+    actions.appendChild(stockBtn);
   }
+
+  card.appendChild(title);
+  card.appendChild(tags);
+  card.appendChild(body);
+  card.appendChild(actions);
   return card;
 }
 
@@ -129,7 +149,7 @@ function renderCard(item, showStock = true) {
 document.getElementById('searchBtn').addEventListener('click', async () => {
   const q = document.getElementById('searchInput').value.trim();
   if (!q) return;
-  const res = await fetch(`${API}/stock`);
+  const res = await fetch(API + '/stock');
   const data = await res.json();
   const results = data.items.filter(i =>
     i.title.includes(q) || (i.tags || []).some(t => t.includes(q))
@@ -149,7 +169,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 
 // ストック一覧
 async function loadStock() {
-  const res = await fetch(`${API}/stock`);
+  const res = await fetch(API + '/stock');
   const data = await res.json();
   const sort = document.getElementById('sortSelect').value;
   const tag = document.getElementById('tagFilter').value.trim();
@@ -167,7 +187,7 @@ document.getElementById('tagFilter').addEventListener('input', loadStock);
 // プリセット一覧ロード
 async function loadPresets() {
   try {
-    const res = await fetch(`${API}/presets`);
+    const res = await fetch(API + '/presets');
     const data = await res.json();
     presetsCache = data.presets || [];
     renderPresetList();
@@ -182,7 +202,7 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   const newline = document.getElementById('presetNewline').value;
   const space = document.getElementById('presetSpace').value;
   if (!name || !url_pattern) return;
-  await fetch(`${API}/presets`, {
+  await fetch(API + '/presets', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, url_pattern, newline, space })
@@ -192,43 +212,6 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   toast('プリセットを追加しました');
   await loadPresets();
   document.getElementById('presetList').scrollIntoView({ behavior: 'smooth' });
-});
-
-// AA生成
-document.getElementById('generateBtn').addEventListener('click', async () => {
-  const prompt = document.getElementById('generateInput').value.trim();
-  if (!prompt) return;
-
-  const btn = document.getElementById('generateBtn');
-  const container = document.getElementById('generateResults');
-  btn.textContent = '生成中...';
-  btn.disabled = true;
-  container.innerHTML = '';
-
-  try {
-    const res = await fetch(`${API}/generate-aa`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await res.json();
-
-    if (!data.items || data.items.length === 0) {
-      container.innerHTML = '<p style="color:#888;font-size:13px">生成できませんでした</p>';
-      return;
-    }
-
-    data.items.forEach(item => container.appendChild(renderCard(item, true)));
-  } catch (e) {
-    container.innerHTML = `<p style="color:red;font-size:13px">エラー：${e.message}</p>`;
-  } finally {
-    btn.textContent = '生成';
-    btn.disabled = false;
-  }
-});
-
-document.getElementById('generateInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('generateBtn').click();
 });
 
 // 初期化

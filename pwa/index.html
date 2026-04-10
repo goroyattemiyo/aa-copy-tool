@@ -12,7 +12,6 @@
     <nav class="tab-bar">
       <button class="tab active" data-tab="search">検索</button>
       <button class="tab" data-tab="stock">ストック</button>
-      <button class="tab" data-tab="generate">生成</button>
       <button class="tab" data-tab="settings">設定</button>
     </nav>
 
@@ -33,18 +32,6 @@
         <input type="text" id="tagFilter" placeholder="タグで絞り込み" />
       </div>
       <div id="stockList" class="aa-list"></div>
-    </section>
-
-    <section id="generate" class="screen">
-      <div class="form-group">
-        <label>テーマを入力</label>
-        <p class="hint">例：かわいいウサギ、怒ってるネコ、落ち込んだサラリーマン</p>
-        <div class="search-box">
-          <input type="text" id="generateInput" placeholder="例：かわいいウサギ" />
-          <button id="generateBtn">生成</button>
-        </div>
-      </div>
-      <div id="generateResults" class="aa-list"></div>
     </section>
 
     <section id="settings" class="screen">
