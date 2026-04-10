@@ -26,7 +26,7 @@ function toast(msg) {
 // プリセット初期ロード
 async function initPresets() {
   try {
-    const res = await fetch(\/presets);
+    const res = await fetch(`${API}/presets`);
     const data = await res.json();
     presetsCache = data.presets || [];
     renderPresetSelector();
@@ -69,11 +69,11 @@ function renderPresetList() {
   presetsCache.forEach(p => {
     const card = document.createElement('div');
     card.className = 'preset-card';
-    card.innerHTML = 
-      <div class="preset-name">\</div>
-      <div class="preset-detail">URL：\</div>
-      <div class="preset-detail">改行：\ ／ スペース：\</div>
-    ;
+    card.innerHTML = `
+      <div class="preset-name">${p.name}</div>
+      <div class="preset-detail">URL：${p.url_pattern}</div>
+      <div class="preset-detail">改行：${p.newline} ／ スペース：${p.space}</div>
+    `;
     container.appendChild(card);
   });
 }
@@ -93,28 +93,28 @@ function applyPreset(text, preset) {
 function renderCard(item, showStock = true) {
   const card = document.createElement('div');
   card.className = 'aa-card';
-  card.innerHTML = 
-    <div class="aa-title">\</div>
-    <div class="aa-tags">\</div>
-    <div class="aa-body">\</div>
+  card.innerHTML = `
+    <div class="aa-title">${item.title}</div>
+    <div class="aa-tags">${(item.tags || []).join(', ')}</div>
+    <div class="aa-body">${item.body}</div>
     <div class="aa-actions">
       <button class="copy-btn">コピー</button>
-      \
+      ${showStock ? '<button class="stock-btn">ストック</button>' : ''}
     </div>
-  ;
+  `;
   card.querySelector('.copy-btn').addEventListener('click', async () => {
     const text = applyPreset(item.body, selectedPreset);
     await navigator.clipboard.writeText(text);
-    await fetch(\/history, {
+    await fetch(`${API}/history`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ aa_id: item.id, preset_used: selectedPreset?.name || null })
     });
-    toast(selectedPreset ? コピー（\補正） : 'コピーしました');
+    toast(selectedPreset ? `コピー（${selectedPreset.name}補正）` : 'コピーしました');
   });
   if (showStock) {
     card.querySelector('.stock-btn').addEventListener('click', async () => {
-      await fetch(\/stock, {
+      await fetch(`${API}/stock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: item.title, body: item.body, tags: item.tags })
@@ -129,7 +129,7 @@ function renderCard(item, showStock = true) {
 document.getElementById('searchBtn').addEventListener('click', async () => {
   const q = document.getElementById('searchInput').value.trim();
   if (!q) return;
-  const res = await fetch(\/stock);
+  const res = await fetch(`${API}/stock`);
   const data = await res.json();
   const results = data.items.filter(i =>
     i.title.includes(q) || (i.tags || []).some(t => t.includes(q))
@@ -149,7 +149,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 
 // ストック一覧
 async function loadStock() {
-  const res = await fetch(\/stock);
+  const res = await fetch(`${API}/stock`);
   const data = await res.json();
   const sort = document.getElementById('sortSelect').value;
   const tag = document.getElementById('tagFilter').value.trim();
@@ -167,7 +167,7 @@ document.getElementById('tagFilter').addEventListener('input', loadStock);
 // プリセット一覧ロード
 async function loadPresets() {
   try {
-    const res = await fetch(\/presets);
+    const res = await fetch(`${API}/presets`);
     const data = await res.json();
     presetsCache = data.presets || [];
     renderPresetList();
@@ -182,7 +182,7 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   const newline = document.getElementById('presetNewline').value;
   const space = document.getElementById('presetSpace').value;
   if (!name || !url_pattern) return;
-  await fetch(\/presets, {
+  await fetch(`${API}/presets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, url_pattern, newline, space })
@@ -206,7 +206,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   container.innerHTML = '';
 
   try {
-    const res = await fetch(\/generate-aa, {
+    const res = await fetch(`${API}/generate-aa`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt }),
@@ -220,7 +220,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
 
     data.items.forEach(item => container.appendChild(renderCard(item, true)));
   } catch (e) {
-    container.innerHTML = <p style="color:red;font-size:13px">エラー：\</p>;
+    container.innerHTML = `<p style="color:red;font-size:13px">エラー：${e.message}</p>`;
   } finally {
     btn.textContent = '生成';
     btn.disabled = false;
