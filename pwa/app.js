@@ -3,7 +3,13 @@ const API = 'https://aa-copy-tool-goroyattemiyos-projects.vercel.app/api';
 let presetsCache = [];
 let selectedPreset = null;
 
-// タブ切り替え
+const LINKS = [
+  { name: 'Google AA検索', url: 'https://www.google.com/search?q=AA+アスキーアート' },
+  { name: 'Twitter/X AA検索', url: 'https://x.com/search?q=アスキーアート&f=live' },
+  { name: 'aahub.org', url: 'https://aahub.org' },
+  { name: '5ch AA板', url: 'https://medaka.5ch.net/ascii/' },
+];
+
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -11,11 +17,11 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'stock') loadStock();
+    if (tab.dataset.tab === 'find') renderLinks();
     if (tab.dataset.tab === 'settings') loadPresets();
   });
 });
 
-// トースト
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -23,7 +29,12 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2000);
 }
 
-// プリセット初期ロード
+function normalize(str) {
+  return str
+    .replace(/[\uff61-\uff9f]/g, s => String.fromCharCode(s.charCodeAt(0) + 0x60))
+    .toLowerCase();
+}
+
 async function initPresets() {
   try {
     const res = await fetch(API + '/presets');
@@ -34,13 +45,12 @@ async function initPresets() {
   } catch { presetsCache = []; }
 }
 
-// 検索画面にプリセットセレクターを追加
 function renderPresetSelector() {
   const existing = document.getElementById('presetSelector');
   if (existing) existing.remove();
   const selector = document.createElement('select');
   selector.id = 'presetSelector';
-  selector.style.cssText = 'width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff;';
+  selector.style.cssText = 'width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff;margin-bottom:8px;';
   const none = document.createElement('option');
   none.value = '';
   none.textContent = '補正なし';
@@ -54,11 +64,10 @@ function renderPresetSelector() {
   selector.addEventListener('change', () => {
     selectedPreset = presetsCache.find(p => p.id === selector.value) || null;
   });
-  const searchScreen = document.getElementById('search');
-  searchScreen.insertBefore(selector, searchScreen.querySelector('.search-box').nextSibling);
+  const stockScreen = document.getElementById('stock');
+  stockScreen.insertBefore(selector, stockScreen.querySelector('.search-box'));
 }
 
-// プリセット一覧を描画
 function renderPresetList() {
   const container = document.getElementById('presetList');
   container.innerHTML = '';
@@ -69,15 +78,14 @@ function renderPresetList() {
   presetsCache.forEach(p => {
     const card = document.createElement('div');
     card.className = 'preset-card';
-    card.innerHTML = '<div class="preset-name"></div><div class="preset-detail"></div><div class="preset-detail2"></div>';
-    card.querySelector('.preset-name').textContent = p.name;
-    card.querySelector('.preset-detail').textContent = 'URL：' + p.url_pattern;
-    card.querySelector('.preset-detail2').textContent = '改行：' + p.newline + ' ／ スペース：' + (p.space === 'full' ? '全角に統一' : p.space === 'half' ? '半角に統一' : '補正しない');
+    card.innerHTML = '<div class="preset-name"></div><div class="preset-detail"></div><div class="preset-detail"></div>';
+    card.querySelectorAll('div')[0].textContent = p.name;
+    card.querySelectorAll('div')[1].textContent = 'URL：' + p.url_pattern;
+    card.querySelectorAll('div')[2].textContent = '改行：' + p.newline + ' ／ スペース：' + (p.space === 'full' ? '全角に統一' : p.space === 'half' ? '半角に統一' : '補正しない');
     container.appendChild(card);
   });
 }
 
-// 補正適用
 function applyPreset(text, preset) {
   if (!preset) return text;
   let result = text;
@@ -88,8 +96,7 @@ function applyPreset(text, preset) {
   return result;
 }
 
-// AAカード生成
-function renderCard(item, showStock = true) {
+function renderCard(item) {
   const card = document.createElement('div');
   card.className = 'aa-card';
 
@@ -123,21 +130,6 @@ function renderCard(item, showStock = true) {
   });
   actions.appendChild(copyBtn);
 
-  if (showStock) {
-    const stockBtn = document.createElement('button');
-    stockBtn.className = 'stock-btn';
-    stockBtn.textContent = 'ストック';
-    stockBtn.addEventListener('click', async () => {
-      await fetch(API + '/stock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: item.title, body: item.body, tags: item.tags })
-      });
-      toast('ストックしました');
-    });
-    actions.appendChild(stockBtn);
-  }
-
   card.appendChild(title);
   card.appendChild(tags);
   card.appendChild(body);
@@ -145,46 +137,80 @@ function renderCard(item, showStock = true) {
   return card;
 }
 
-// 検索
-document.getElementById('searchBtn').addEventListener('click', async () => {
-  const q = document.getElementById('searchInput').value.trim();
-  if (!q) return;
+async function loadStock(q) {
   const res = await fetch(API + '/stock');
   const data = await res.json();
-  const results = data.items.filter(i =>
-    i.title.includes(q) || (i.tags || []).some(t => t.includes(q))
-  );
-  const container = document.getElementById('searchResults');
+  let items = [...data.items];
+  if (q) {
+    const nq = normalize(q);
+    items = items.filter(i =>
+      normalize(i.title).includes(nq) ||
+      normalize(i.body).includes(nq) ||
+      (i.tags || []).some(t => normalize(t).includes(nq))
+    );
+  }
+  items.sort((a, b) => b.use_count - a.use_count);
+  const container = document.getElementById('stockList');
   container.innerHTML = '';
-  if (results.length === 0) {
+  if (items.length === 0) {
     container.innerHTML = '<p style="color:#888;font-size:13px">見つかりませんでした</p>';
     return;
   }
-  results.forEach(item => container.appendChild(renderCard(item)));
+  items.forEach(item => container.appendChild(renderCard(item)));
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q = document.getElementById('searchInput').value.trim();
+  loadStock(q);
 });
 
 document.getElementById('searchInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('searchBtn').click();
 });
 
-// ストック一覧
-async function loadStock() {
-  const res = await fetch(API + '/stock');
-  const data = await res.json();
-  const sort = document.getElementById('sortSelect').value;
-  const tag = document.getElementById('tagFilter').value.trim();
-  let items = [...data.items];
-  if (tag) items = items.filter(i => (i.tags || []).includes(tag));
-  items.sort((a, b) => sort === 'use_count' ? b.use_count - a.use_count : b.created_at.localeCompare(a.created_at));
-  const container = document.getElementById('stockList');
+function renderLinks() {
+  const container = document.getElementById('linkList');
   container.innerHTML = '';
-  items.forEach(item => container.appendChild(renderCard(item, false)));
+  LINKS.forEach(link => {
+    const btn = document.createElement('a');
+    btn.className = 'link-btn';
+    btn.textContent = link.name;
+    btn.href = link.url;
+    btn.target = '_blank';
+    container.appendChild(btn);
+  });
 }
 
-document.getElementById('sortSelect').addEventListener('change', loadStock);
-document.getElementById('tagFilter').addEventListener('input', loadStock);
+document.getElementById('pasteBtn').addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text.trim()) { toast('クリップボードが空です'); return; }
+    document.getElementById('pastePreview').textContent = text;
+    document.getElementById('pasteForm').style.display = 'block';
+    document.getElementById('pasteTitle').focus();
+  } catch {
+    toast('クリップボードの読み取りに失敗しました');
+  }
+});
 
-// プリセット一覧ロード
+document.getElementById('pasteStockBtn').addEventListener('click', async () => {
+  const title = document.getElementById('pasteTitle').value.trim();
+  const body = document.getElementById('pastePreview').textContent;
+  const tagsRaw = document.getElementById('pasteTags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+  if (!title) { toast('タイトルを入力してください'); return; }
+  await fetch(API + '/stock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, body, tags })
+  });
+  document.getElementById('pasteTitle').value = '';
+  document.getElementById('pasteTags').value = '';
+  document.getElementById('pastePreview').textContent = '';
+  document.getElementById('pasteForm').style.display = 'none';
+  toast('ストックに追加しました');
+});
+
 async function loadPresets() {
   try {
     const res = await fetch(API + '/presets');
@@ -195,7 +221,6 @@ async function loadPresets() {
   } catch { presetsCache = []; }
 }
 
-// プリセット追加
 document.getElementById('addPresetBtn').addEventListener('click', async () => {
   const name = document.getElementById('presetName').value.trim();
   const url_pattern = document.getElementById('presetPattern').value.trim();
@@ -211,8 +236,7 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
   document.getElementById('presetPattern').value = '';
   toast('プリセットを追加しました');
   await loadPresets();
-  document.getElementById('presetList').scrollIntoView({ behavior: 'smooth' });
 });
 
-// 初期化
 initPresets();
+loadStock();

@@ -10,69 +10,71 @@
 <body>
   <div id="app">
     <nav class="tab-bar">
-      <button class="tab active" data-tab="search">検索</button>
-      <button class="tab" data-tab="stock">ストック</button>
+      <button class="tab active" data-tab="stock">ストック</button>
+      <button class="tab" data-tab="find">さがす</button>
       <button class="tab" data-tab="settings">設定</button>
     </nav>
 
-    <section id="search" class="screen active">
+    <section id="stock" class="screen active">
       <div class="search-box">
         <input type="text" id="searchInput" placeholder="AAを検索..." />
         <button id="searchBtn">検索</button>
       </div>
-      <div id="searchResults" class="aa-list"></div>
+      <div id="stockList" class="aa-list"></div>
     </section>
 
-    <section id="stock" class="screen">
-      <div class="filter-bar">
-        <select id="sortSelect">
-          <option value="use_count">よく使う順</option>
-          <option value="created_at">登録日順</option>
-        </select>
-        <input type="text" id="tagFilter" placeholder="タグで絞り込み" />
+    <section id="find" class="screen">
+      <div class="section-title">AAをさがす</div>
+      <div id="linkList" class="link-list"></div>
+
+      <div class="section-title">クリップボードからストックに追加</div>
+      <p class="hint">AAをコピーしてからボタンを押してください</p>
+      <button id="pasteBtn" class="paste-btn">クリップボードから読み込む</button>
+      <div id="pasteForm" style="display:none">
+        <div class="form-group">
+          <label>タイトル</label>
+          <input type="text" id="pasteTitle" placeholder="例：モナー" />
+        </div>
+        <div class="form-group">
+          <label>プレビュー</label>
+          <div id="pastePreview" class="aa-body"></div>
+        </div>
+        <div class="form-group">
+          <label>タグ（カンマ区切り）</label>
+          <input type="text" id="pasteTags" placeholder="例：キャラ,2ch" />
+        </div>
+        <button id="pasteStockBtn">ストックに追加</button>
       </div>
-      <div id="stockList" class="aa-list"></div>
     </section>
 
     <section id="settings" class="screen">
       <h2>補正プリセット</h2>
-      <p class="hint">貼り付け先のサービスごとに補正設定を登録します。コピー時にセレクターで選ぶと自動で補正が適用されます。</p>
-
+      <p class="hint">貼り付け先のサービスごとに補正設定を登録します。</p>
       <div id="presetList"></div>
-
       <div class="section-title">新しいプリセットを追加</div>
-
       <div class="form-group">
         <label>プリセット名</label>
-        <p class="hint">貼り付け先のサービス名（例：Twitter/X、LINE、5ch、Threads）</p>
         <input type="text" id="presetName" placeholder="例：Threads" />
       </div>
-
       <div class="form-group">
         <label>対象サービスのURL</label>
-        <p class="hint">貼り付け先を開いたときのブラウザのURLをそのまま入力してください。例：https://www.threads.net/@username の場合は threads.net と入力。複数サービスをまとめる場合は threads.net|instagram.com のように | でつなぎます。</p>
         <input type="text" id="presetPattern" placeholder="例：threads.net" />
       </div>
-
       <div class="form-group">
         <label>改行コード</label>
-        <p class="hint">LF はUnix・Web系サービス向け。CRLF はWindows・掲示板系向け。迷ったらLF。</p>
         <select id="presetNewline">
           <option value="LF">LF（Unix・Web系）</option>
           <option value="CRLF">CRLF（Windows・掲示板系）</option>
         </select>
       </div>
-
       <div class="form-group">
         <label>スペース補正</label>
-        <p class="hint">全角に統一：半角スペースを全角に変換。SNS系で崩れにくくなります。半角に統一：全角スペースを半角に変換。補正しない：そのままコピー。</p>
         <select id="presetSpace">
           <option value="full">全角に統一</option>
           <option value="half">半角に統一</option>
           <option value="none">補正しない</option>
         </select>
       </div>
-
       <button id="addPresetBtn">追加</button>
     </section>
 
