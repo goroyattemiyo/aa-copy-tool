@@ -8,6 +8,13 @@
   },
   "permissions": ["storage", "activeTab", "tabs", "clipboardWrite"],
   "host_permissions": [
-    "https://aa-copy-tool-goroyattemiyos-projects.vercel.app/*"
+    "https://aa-copy-tool-goroyattemiyos-projects.vercel.app/*",
+    "https://aahub.org/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://aahub.org/*"],
+      "js": ["content_aahub.js"]
+    }
   ]
 }
