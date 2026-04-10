@@ -23,6 +23,7 @@ PWA（スマホ対応）と Chrome 拡張（PC）の両対応。
 | バックエンド | Vercel サーバーレス関数（ESM） |
 | データ管理 | GitHub API（リポジトリ直接） |
 | AI抽出 | Gemini 2.5 Flash Lite |
+| AA生成 | Gemini 2.0 Flash Lite（generate-aa.js） |
 | フロントエンド | Vanilla JS（PWA）、Chrome拡張 MV3 |
 | デプロイ | Vercel（GitHub連携、自動デプロイ） |
 
@@ -43,6 +44,7 @@ PWA（スマホ対応）と Chrome 拡張（PC）の両対応。
     │   ├── history.js      # コピー履歴（GET/POST、直近50件）
     │   ├── presets.js      # 補正プリセット（GET/POST）
     │   ├── fetch-aa.js     # URL fetch + Gemini AA抽出
+    │   ├── generate-aa.js  # テーマ指定AA生成（Gemini）
     │   └── debug-fetch.js  # デバッグ用（本番前に削除推奨）
     ├── data/
     │   ├── aa-stock.json
@@ -62,35 +64,6 @@ PWA（スマホ対応）と Chrome 拡張（PC）の両対応。
     ├── HANDOVER.md
     └── vercel.json
 
-## データスキーマ
-
-aa-stock.json:
-  version: 1
-  items:
-    - id: uuid
-      title: モナー
-      body: "  ∧_∧\n（´∀｀）"
-      tags: [キャラ, 2ch]
-      created_at: "2026-04-09"
-      use_count: 0
-
-aa-presets.json:
-  version: 1
-  presets:
-    - id: preset-001
-      name: Twitter/X
-      url_pattern: "twitter.com|x.com"
-      newline: LF
-      space: full
-
-aa-history.json:
-  version: 1
-  items:
-    - id: uuid
-      aa_id: uuid
-      copied_at: "2026-04-09T10:00:00Z"
-      preset_used: Twitter/X
-
 ## API エンドポイント
 
 | エンドポイント | メソッド | 内容 |
@@ -103,6 +76,7 @@ aa-history.json:
 | /api/presets | GET | プリセット一覧取得 |
 | /api/presets | POST | プリセット追加 |
 | /api/fetch-aa | POST | URL指定でAA抽出（Gemini） |
+| /api/generate-aa | POST | テーマ指定でAA生成（Gemini） |
 
 ## 実装済み機能
 
@@ -111,53 +85,31 @@ aa-history.json:
 - Phase 3：Chrome 拡張（popup完結・URL自動判定）完了
 - Phase 4：補正プリセット自動判定 完了
 - Phase 5：Gemini AA抽出API実装 完了
-- Phase 5続き：AA検索・取得UXの設計 未解決
+- Phase 6：PWA「生成」タブ実装 完了（2026-04-10）
 
-## 未解決課題：AA検索・取得
+## 未解決課題
 
-### 問題
-主要なAAまとめサイト（aahub.org等）はSPA（JavaScript動的レンダリング）のため
-サーバーサイドfetchではHTMLが空で返ってきてAAを取得できない。
+### AA生成品質
+- Geminiが崩れたAAを返すことがある
+- bodyの改行が正しく処理されていない場合がある
+- renderCardでbodyをinnerHTMLに直接入れているためエスケープ問題の可能性あり
 
-### 検討した方法と結果
+### 対策候補
+1. プロンプトで「シンプルなAAのみ」に絞る
+2. AA生成後にバリデーション（行数・文字数チェック）を追加
+3. renderCardのbody表示をtextContentに変更してエスケープ処理を入れる
 
-| 方法 | 結果 |
-|---|---|
-| Vercel関数からfetch | SPA非対応。静的サイトのみ取得可能 |
-| aahub.org | Please enable JavaScript で取得不可 |
-| ascii-art.net | カテゴリ一覧のみ、AA実体は別ページ |
-| utf8art.com | SPA、取得不可 |
-
-### 次回検討候補
-
-1. Chrome拡張のcontent scriptでDOM直接読み取り
-   - 拡張機能はJS実行後のDOMにアクセス可能
-   - ユーザーがAAサイトを開いた状態でボタンを押すとストックに追加
-   - 追加実装コストが低い（既存拡張の延長）
-
-2. GitHub Actionsでバッチ収集（Puppeteer）
-   - ヘッドレスブラウザで定期収集してJSONに保存
-   - PWA・拡張はそのJSONを検索するだけ
-   - データが溜まるほど強くなる
-
-3. テキスト検索（Google Custom Search API等）経由
-   - 検索結果からAAを抽出するアプローチ
-   - 未検証
-
-## 補正プリセット（初期値）
-
-| 名前 | URLパターン | 改行 | スペース |
-|---|---|---|---|
-| Twitter/X | twitter.com\|x.com | LF | 全角 |
-| LINE | line.me | LF | 全角 |
-| 5ch | 5ch.net\|2ch.sc | CRLF | 全角 |
-| Threads | threads.net | LF | 全角 |
+### タイムアウト
+- Gemini 2.5 Flash Liteは重くタイムアウトすることがある
+- vercel.jsonでmaxDuration: 30を設定済み
+- 生成件数を3件・maxOutputTokens: 512に制限済み
 
 ## 開発メモ
 
-- PowerShellではなくBashで作業すること（Codespaces環境）
-- catコマンドでファイル書き込み、VSCodeで直接編集も可
+- PowerShellではテンプレートリテラル（\\）や＄{}が展開されて壊れる
+- JSファイルの編集はVSCodeで直接行うか、文字列結合（+）を使ったヒアドキュメントで
 - Vercel自動デプロイ：pushすると1〜2分で反映
 - git pull --rebase origin main でコンフリクト解消
 - package.json に "type": "module" が必須（@octokit/rest がESMのため）
 - debug-fetch.js は本番公開前に削除すること
+- scripts/generate-aa.js と pwa/generate-tab.js は不要ファイル（削除してよい）
