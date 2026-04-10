@@ -34,13 +34,13 @@
       " \u2227\uff3f\u2227\n\uff08\uff9f\u2200\uff9f \uff09",
       "(\u00b4\uff65\u03c9\uff65)",
       " \u2229\uff3f\uff3f\u2229\n|\u30ce\u3000\u30bd\n/\u3000\u25cf\u25cf|",
-      "\uff�\uff80\u2501(\uff9f\u2200\uff9f)\u2501!!",
-      "( \uff9fD\uff9f)\u22833\u65e6",
+      "\uff66\uff80\u2501(\uff9f\u2200\uff9f)\u2501!!",
+      "( \uff9f\u0414\uff9f)\u22833\u65e6",
       " \u2227 \u2227\n(*\uff9f\u30fc\uff9f)",
       "\uff08 \uff3e\u03c9\uff3e\uff09",
       "\uff4d\uff19(\uff9f\u0414\uff9f)",
       "(\u00b4\u30fb\u03c9\u30fb\uff40)",
-      "( \uff70\u0434\uff70\u00b4)\uff�\uff98\uff83",
+      "( \uff70\u0434\uff70\u00b4)\uff66\uff98\uff83",
       "\u2227\uff3f\u2227\n(\u00b4\u2200\uff40)",
       "(\u30ce\uff40\u0414\u00b4)\u30ce\u5f61\u253b\u2501\u253b",
     ];
@@ -49,8 +49,11 @@
     const iconWrap = document.getElementById('icon-wrap');
     const appTitle = document.getElementById('app-title');
     const subTitle = document.getElementById('sub-title');
-    const durBase = 3000;
-    const interval = 400;
+
+    const durBase  = 1800;
+    const interval = 280;
+    const pauseDur = 400;
+    const halfDur  = durBase / 2;
 
     AAS.forEach((aa, i) => {
       const el = document.createElement('div');
@@ -60,23 +63,33 @@
 
       const fromLeft = Math.random() > 0.5;
       const startX = fromLeft ? -160 : window.innerWidth + 60;
-      const endX = fromLeft ? window.innerWidth + 60 : -160;
-      const y = 20 + Math.random() * (window.innerHeight - 80);
-      const delay = i * interval;
-      const dur = durBase + Math.random() * 400;
+      const midX   = window.innerWidth / 2 - 40;
+      const endX   = fromLeft ? window.innerWidth + 60 : -160;
+      const y      = 20 + Math.random() * (window.innerHeight - 80);
+      const delay  = i * interval;
 
-      el.style.top = y + 'px';
+      el.style.top  = y + 'px';
       el.style.left = startX + 'px';
 
       setTimeout(() => {
-        el.style.transition = 'left ' + dur + 'ms linear, opacity 200ms';
+        el.style.transition = 'left ' + halfDur + 'ms linear, opacity 200ms';
         el.style.opacity = 0.9;
-        el.style.left = endX + 'px';
-        setTimeout(() => { el.style.opacity = 0; }, dur - 300);
+        el.style.left = midX + 'px';
       }, delay);
+
+      setTimeout(() => {
+        el.style.transition = 'none';
+        el.style.left = midX + 'px';
+      }, delay + halfDur);
+
+      setTimeout(() => {
+        el.style.transition = 'left ' + halfDur + 'ms linear, opacity 200ms';
+        el.style.left = endX + 'px';
+        setTimeout(() => { el.style.opacity = 0; }, halfDur - 300);
+      }, delay + halfDur + pauseDur);
     });
 
-    const iconDelay = AAS.length * interval + 200;
+    const iconDelay = AAS.length * interval + durBase + pauseDur + 200;
 
     setTimeout(() => {
       iconWrap.style.transition = 'opacity 600ms ease, transform 600ms ease';
@@ -97,7 +110,7 @@
 
     setTimeout(() => {
       window.location.href = 'index.html';
-    }, iconDelay + 2200);
+    }, iconDelay + 2500);
   <\/script>
 </body>
 </html>
