@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AA Copy Tool</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="stock">ストック</button>
+      <button class="tab" data-tab="find">さがす</button>
+      <button class="tab" data-tab="settings">設定</button>
+    </nav>
+
+    <section id="stock" class="screen active">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="AAを検索..." />
+        <button id="searchBtn">検索</button>
+      </div>
+      <div id="stockList" class="aa-list"></div>
+    </section>
+
+    <section id="find" class="screen">
+      <div class="section-title">AAをさがす</div>
+      <div id="linkList" class="link-list"></div>
+
+      <div class="section-title">クリップボードからストックに追加</div>
+      <p class="hint">AAをコピーしてからボタンを押してください</p>
+      <button id="pasteBtn" class="paste-btn">クリップボードから読み込む</button>
+      <div id="pasteForm" style="display:none">
+        <div class="form-group">
+          <label>タイトル</label>
+          <input type="text" id="pasteTitle" placeholder="例：モナー" />
+        </div>
+        <div class="form-group">
+          <label>プレビュー</label>
+          <div id="pastePreview" class="aa-body"></div>
+        </div>
+        <div class="form-group">
+          <label>タグ（カンマ区切り）</label>
+          <input type="text" id="pasteTags" placeholder="例：キャラ,2ch" />
+        </div>
+        <button id="pasteStockBtn">ストックに追加</button>
+      </div>
+    </section>
+
+    <section id="settings" class="screen">
+      <h2>補正プリセット</h2>
+      <p class="hint">貼り付け先のサービスごとに補正設定を登録します。</p>
+      <div id="presetList"></div>
+      <div class="section-title">新しいプリセットを追加</div>
+      <div class="form-group">
+        <label>プリセット名</label>
+        <input type="text" id="presetName" placeholder="例：Threads" />
+      </div>
+      <div class="form-group">
+        <label>対象サービスのURL</label>
+        <input type="text" id="presetPattern" placeholder="例：threads.net" />
+      </div>
+      <div class="form-group">
+        <label>改行コード</label>
+        <select id="presetNewline">
+          <option value="LF">LF（Unix・Web系）</option>
+          <option value="CRLF">CRLF（Windows・掲示板系）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>スペース補正</label>
+        <select id="presetSpace">
+          <option value="full">全角に統一</option>
+          <option value="half">半角に統一</option>
+          <option value="none">補正しない</option>
+        </select>
+      </div>
+      <button id="addPresetBtn">追加</button>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AA Copy Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; width: 100vw; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    #splash { width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .aa-fly { position: absolute; color: #33ff33; font-family: 'Share Tech Mono', monospace; white-space: pre; opacity: 0; font-size: 13px; line-height: 1.4; }
+    #center { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 10; }
+    #icon-wrap { opacity: 0; transform: scale(0.6); transition: none; }
+    #app-title { font-family: 'Share Tech Mono', monospace; font-size: 24px; color: #33ff33; letter-spacing: 6px; opacity: 0; transform: translateY(8px); transition: none; }
+    #sub-title { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #33ff3377; letter-spacing: 3px; opacity: 0; transition: none; }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <div id="center">
+      <div id="icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 192 192">
+          <rect width="192" height="192" rx="32" fill="#0a0a0a" stroke="#33ff33" stroke-width="6"/>
+          <text x="50%" y="52%" font-family="monospace" font-size="44" fill="#33ff33" text-anchor="middle" dominant-baseline="middle">A(^o^)A</text>
+        </svg>
+      </div>
+      <div id="app-title">AA COPY TOOL</div>
+      <div id="sub-title">ASCII ART MANAGER</div>
+    </div>
+  </div>
+  <script>
+    const AAS = [
+      " ∧＿∧\n（ﾟ∀ﾟ ）",
+      "(´･ω･`)",
+      "ｷﾀ━(ﾟ∀ﾟ)━!!",
+      "( ﾟДﾟ)⊃旦",
+      " ∧ ∧\n(*ﾟーﾟ)",
+      "（ ＾ω＾）",
+      "ｍ９(ﾟДﾟ)",
+      "(´・ω・｀)",
+      "( ｰ`дｰ´)ｷﾘｯ",
+      "∧＿∧\n(´∀｀)",
+      "(ノ｀Д´)ノ彡┻━┻",
+    ];
+
+    const splash = document.getElementById('splash');
+    const iconWrap = document.getElementById('icon-wrap');
+    const appTitle = document.getElementById('app-title');
+    const subTitle = document.getElementById('sub-title');
+
+    const durBase  = 1800;
+    const interval = 280;
+    const pauseDur = 400;
+    const halfDur  = durBase / 2;
+
+    AAS.forEach((aa, i) => {
+      const el = document.createElement('div');
+      el.className = 'aa-fly';
+      el.textContent = aa;
+      splash.appendChild(el);
+
+      const fromLeft = Math.random() > 0.5;
+      const startX = fromLeft ? -160 : window.innerWidth + 60;
+      const midX   = window.innerWidth / 2 - 40;
+      const endX   = fromLeft ? window.innerWidth + 60 : -160;
+      const y      = 20 + Math.random() * (window.innerHeight - 80);
+      const delay  = i * interval;
+
+      el.style.top  = y + 'px';
+      el.style.left = startX + 'px';
+
+      setTimeout(() => {
+        el.style.transition = 'left ' + halfDur + 'ms linear, opacity 200ms';
+        el.style.opacity = 0.9;
+        el.style.left = midX + 'px';
+      }, delay);
+
+      setTimeout(() => {
+        el.style.transition = 'none';
+        el.style.left = midX + 'px';
+      }, delay + halfDur);
+
+      setTimeout(() => {
+        el.style.transition = 'left ' + halfDur + 'ms linear, opacity 200ms';
+        el.style.left = endX + 'px';
+        setTimeout(() => { el.style.opacity = 0; }, halfDur - 300);
+      }, delay + halfDur + pauseDur);
+    });
+
+    const iconDelay = AAS.length * interval + durBase + pauseDur + 200;
+
+    setTimeout(() => {
+      iconWrap.style.transition = 'opacity 600ms ease, transform 600ms ease';
+      iconWrap.style.opacity = 1;
+      iconWrap.style.transform = 'scale(1)';
+    }, iconDelay);
+
+    setTimeout(() => {
+      appTitle.style.transition = 'opacity 500ms ease, transform 500ms ease';
+      appTitle.style.opacity = 1;
+      appTitle.style.transform = 'translateY(0)';
+    }, iconDelay + 500);
+
+    setTimeout(() => {
+      subTitle.style.transition = 'opacity 500ms ease';
+      subTitle.style.opacity = 1;
+    }, iconDelay + 900);
+
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, iconDelay + 2500);
+  </script>
+</body>
+</html>
