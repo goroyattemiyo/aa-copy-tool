@@ -137,26 +137,51 @@ function renderCard(item) {
   return card;
 }
 
+const BASE = 'https://aa-copy-tool-goroyattemiyos-projects.vercel.app';
+let allItems = null;
+
+async function loadAllItems() {
+  if (allItems) return allItems;
+  const res = await fetch(BASE + '/aa/index.json');
+  const index = await res.json();
+  const results = await Promise.all(
+    index.categories.map(cat =>
+      fetch(BASE + '/aa/' + cat.file).then(r => r.json())
+    )
+  );
+  allItems = results.flatMap(r => r.items);
+  return allItems;
+}
+
 async function loadStock(q) {
-  const res = await fetch(API + '/stock');
-  const data = await res.json();
-  let items = [...data.items];
-  if (q) {
-    const nq = normalize(q);
-    items = items.filter(i =>
-      normalize(i.title).includes(nq) ||
-      normalize(i.body).includes(nq) ||
-      (i.tags || []).some(t => normalize(t).includes(nq))
-    );
-  }
-  items.sort((a, b) => b.use_count - a.use_count);
   const container = document.getElementById('stockList');
-  container.innerHTML = '';
-  if (items.length === 0) {
-    container.innerHTML = '<p style="color:#888;font-size:13px">見つかりませんでした</p>';
-    return;
+  container.innerHTML = '<p style="color:#888;font-size:13px">読み込み中...</p>';
+  try {
+    let items = await loadAllItems();
+    if (q) {
+      const nq = normalize(q);
+      items = items.filter(i =>
+        normalize(i.title).includes(nq) ||
+        normalize(i.body).includes(nq) ||
+        (i.tags || []).some(t => normalize(t).includes(nq))
+      );
+    }
+    items = [...items].sort((a, b) => (b.use_count || 0) - (a.use_count || 0));
+    container.innerHTML = '';
+    if (items.length === 0) {
+      container.innerHTML = '<p style="color:#888;font-size:13px">見つかりませんでした</p>';
+      return;
+    }
+    items.slice(0, 100).forEach(item => container.appendChild(renderCard(item)));
+    if (items.length > 100) {
+      const more = document.createElement('p');
+      more.style.cssText = 'color:#888;font-size:13px;text-align:center';
+      more.textContent = `他 ${items.length - 100} 件 — 検索で絞り込んでください`;
+      container.appendChild(more);
+    }
+  } catch(e) {
+    container.innerHTML = '<p style="color:red;font-size:13px">読み込みエラー: ' + e.message + '</p>';
   }
-  items.forEach(item => container.appendChild(renderCard(item)));
 }
 
 document.getElementById('searchBtn').addEventListener('click', () => {
@@ -240,3 +265,4 @@ document.getElementById('addPresetBtn').addEventListener('click', async () => {
 
 initPresets();
 loadStock();
+
