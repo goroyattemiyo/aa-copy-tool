@@ -1,4 +1,19 @@
 const API = 'https://aa-copy-tool-goroyattemiyos-projects.vercel.app/api';
+const BASE = 'https://aa-copy-tool-goroyattemiyos-projects.vercel.app';
+let allItems = null;
+
+async function loadAllItems() {
+  if (allItems) return allItems;
+  const res = await fetch(BASE + '/aa/index.json');
+  const index = await res.json();
+  const results = await Promise.all(
+    index.categories.map(cat =>
+      fetch(BASE + '/aa/' + cat.file).then(r => r.json())
+    )
+  );
+  allItems = results.flatMap(r => r.items);
+  return allItems;
+}
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -70,18 +85,18 @@ function renderCard(item) {
 document.getElementById('searchBtn').addEventListener('click', async () => {
   const q = document.getElementById('searchInput').value.trim();
   if (!q) return;
-  const res = await fetch(`${API}/stock`);
-  const data = await res.json();
-  const results = data.items.filter(i =>
-    i.title.includes(q) || (i.tags || []).some(t => t.includes(q))
-  );
   const container = document.getElementById('searchResults');
+  container.innerHTML = '<p style="color:#888;font-size:12px">検索中...</p>';
+  const items = await loadAllItems();
+  const results = items.filter(i =>
+    i.title.includes(q) || i.body.includes(q) || (i.tags || []).some(t => t.includes(q))
+  );
   container.innerHTML = '';
   if (results.length === 0) {
     container.innerHTML = '<p style="color:#888;font-size:12px">見つかりませんでした</p>';
     return;
   }
-  results.forEach(item => container.appendChild(renderCard(item)));
+  results.slice(0, 50).forEach(item => container.appendChild(renderCard(item)));
 });
 
 document.getElementById('searchInput').addEventListener('keydown', e => {
@@ -89,11 +104,16 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 });
 
 async function loadStock() {
-  const res = await fetch(`${API}/stock`);
-  const data = await res.json();
   const container = document.getElementById('stockList');
-  container.innerHTML = '';
-  data.items
-    .sort((a, b) => b.use_count - a.use_count)
-    .forEach(item => container.appendChild(renderCard(item)));
+  container.innerHTML = '<p style="color:#888;font-size:12px">読み込み中...</p>';
+  try {
+    const items = await loadAllItems();
+    container.innerHTML = '';
+    items
+      .sort((a, b) => (b.use_count || 0) - (a.use_count || 0))
+      .slice(0, 100)
+      .forEach(item => container.appendChild(renderCard(item)));
+  } catch(e) {
+    container.innerHTML = '<p style="color:red;font-size:12px">読み込みエラー</p>';
+  }
 }
